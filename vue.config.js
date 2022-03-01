@@ -1,8 +1,8 @@
 module.exports = {
-  chainWebpack: config => {
+  chainWebpack: (config) => {
     config.externals({
-      'axios': 'axios',
-      '@inertiajs/inertia': '@inertiajs/inertia'
-    })
-  }
-}
+      axios: 'axios',
+      '@inertiajs/inertia': '@inertiajs/inertia',
+    });
+  },
+};

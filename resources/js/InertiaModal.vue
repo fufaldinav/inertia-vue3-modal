@@ -13,6 +13,7 @@
         :to="telRef"
     >
       <Component
+          is-modal
           :is="modal.component"
           v-bind="modal.page.props"
       />
@@ -21,11 +22,14 @@
 </template>
 
 <script lang="ts" setup>
-import { Inertia } from '@inertiajs/inertia';
+import { Inertia, VisitOptions } from '@inertiajs/inertia';
 import Axios from 'axios';
 import Cancel from 'axios/lib/cancel/Cancel';
-import {ref, shallowRef, unref, watch} from 'vue';
-import {uniqueId} from "./uniqueId";
+import {
+  provide, ref, shallowRef, watch,
+} from 'vue';
+import uniqueId from './uniqueId';
+import { injectIsModal, modalHeader } from './symbols';
 
 const props = defineProps({
   component: String,
@@ -33,12 +37,16 @@ const props = defineProps({
   modalKey: {
     type: String,
     default: '',
-  }
+  },
 });
 
+interface VoidFunction {
+  (): void;
+}
+
 interface ModalRef {
-  component: any,
-  removeBeforeEventListener: Function,
+  component: unknown,
+  removeBeforeEventListener: VoidFunction,
   interceptor: number,
   page: object,
   bind: object,
@@ -47,33 +55,37 @@ interface ModalRef {
 const telRef = ref(null);
 const modal = shallowRef<null | ModalRef>(null);
 
+provide(injectIsModal, true);
+
 const close = () => {
   if (modal.value) {
     // remove the 'x-inertia-modal' and 'x-inertia-modal-redirect-back' headers for future requests
-    unref(modal).removeBeforeEventListener();
+    modal.value.removeBeforeEventListener();
     Axios.interceptors.response.eject(modal.value.interceptor);
     modal.value = null;
   }
 };
 
-const modalHeader = 'X-Inertia-Modal';
-const visitInModal = (url, opts) => {
-  opts = Object.assign({ headers: {}, redirectBack: true, modalProps: {} }, opts);
+const visitInModal = (url: string, options: VisitOptions & {redirectBack?: boolean, modalProps?: object}) => {
+  const opts = {
+    headers: {}, redirectBack: true, modalProps: {}, ...options,
+  };
 
   const currentId = uniqueId();
 
-  const interceptor = Axios.interceptors.response.use(function (response) {
+  const interceptor = Axios.interceptors.response.use((response) => {
     if (response.headers[modalHeader.toLowerCase()] === currentId) {
       const page = response.data;
-      Inertia.resolveComponent(page.component).then((component) => {
+      // @ts-ignore
+      Promise.resolve(Inertia.resolveComponent(page.component)).then((component) => {
         const clone = JSON.parse(JSON.stringify(page));
         const removeBeforeEventListener = Inertia.on('before', (event) => {
           // make sure the backend knows we're requesting from within a modal
           event.detail.visit.headers[modalHeader] = currentId;
           if (opts.redirectBack) {
             event.detail.visit.headers[
-                'X-Inertia-Modal-Redirect-Back'
-                ] = 'true';
+              'X-Inertia-Modal-Redirect-Back'
+            ] = 'true';
           }
         });
         modal.value = {
@@ -85,9 +97,8 @@ const visitInModal = (url, opts) => {
         };
       });
       return Promise.reject(new Cancel());
-    } else {
-      return response;
     }
+    return response;
   });
   Inertia.visit(url, {
     ...opts,
@@ -95,9 +106,9 @@ const visitInModal = (url, opts) => {
   });
 };
 
-
 watch(() => props.modalKey, () => {
-  const fn = 'visitInModal' + props.modalKey
+  const fn = `visitInModal${props.modalKey}`;
+  // @ts-ignore
   Inertia[fn] = visitInModal;
 });
 </script>
