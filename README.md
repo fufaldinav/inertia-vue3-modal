@@ -1,19 +1,10 @@
-# Inertia Vue Modal POC
-
-I've copied the default [Laravel Jetstream](https://jetstream.laravel.com/2.x/stacks/inertia.html) modal component for this demo.
-
-## Blog post
-
-[Proof of Concept: Load any route into a modal with Inertia.js using Laravel and Vue.js](https://protone.media/en/blog/proof-of-concept-load-any-route-into-a-modal-with-inertiajs-using-laravel-and-vuejs)
+# Inertia Vue Modal
 
 ## Limitations
 
 This POC is a very early draft, so these limitations will probably be fixed soon.
 
 * No support for nested modals (modal in modal)
-* Only tested on Vue 2.6 + Laravel 8
-* No access to the parent from within the modal
-* No way to close the modal from the parent
 * It doesn't use browser history navigation
 
 ## Installation
@@ -21,24 +12,11 @@ This POC is a very early draft, so these limitations will probably be fixed soon
 ### Client-side installation
 
 ```bash
-npm i @protonemedia/inertia-vue-modal-poc
+composer require tofandel/inertia-vue-modal
+npm i vendor/tofandel/inertia-vue-modal
 ```
 
-The only dependency for this POC to work is [vue-portal](https://github.com/LinusBorg/portal-vue).
-
-In your main JavaScript file, register the `Modalable` and `ToModal` components:
-
-```javascript
-import Vue from "vue";
-import { Modalable, ToModal } from "@protonemedia/inertia-vue-modal-poc"
-import PortalVue from "portal-vue";
-
-Vue.component("Modalable", Modalable);
-Vue.component("ToModal", ToModal);
-Vue.use(PortalVue)
-```
-
-In your root layout, you need to add the `ComponentModal` as the last component of your template:
+In your layout, you need to add the `InertiaModal` component, here is an example using the Quasar Dialog
 
 ```vue
 <template>
@@ -50,68 +28,46 @@ In your root layout, you need to add the `ComponentModal` as the last component 
       <slot />
     </main>
 
-    <ComponentModal />
+    <InertiaModal>
+      <template #default="{contentRef, close, bind}">
+        <QDialog
+            :model-value="true"
+            v-bind="bind"
+            @update:model-value="close"
+        >
+          <div :ref="contentRef" />
+        </QDialog>
+      </template>
+    </InertiaModal>
   </div>
 </template>
 
-<script>
-import { ComponentModal } from "@protonemedia/inertia-vue-modal-poc"
-
-export default {
-  components: {
-    ComponentModal,
-  },
-};
+<script setup>
+import { InertiaModal } from "@tofandel/inertia-vue-modal";
 </script>
 ```
 
 ### Server-side installation
 
-In your Laravel application, you only need to add a few lines of code to the `HandleInertiaRequests` middleware.
-
-1. Add the `handle` method to the `HandleInertiaRequests` middleware.
-2. Add the `isModal` property to the shared data array.
+In your Laravel application, you need to extend our HandlesInertiaModalRequest middleware
 
 ```php
 <?php
 
 namespace App\Http\Middleware;
 
-use Closure;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Middleware;
-use Symfony\Component\HttpFoundation\RedirectResponse;
+//...
+use Tofandel\InertiaVueModal\HandlesInertiaModalRequest;
 
-class HandleInertiaRequests extends Middleware
+class HandleInertiaRequests extends HandlesInertiaModalRequest
 {
-    public function handle(Request $request, Closure $next)
-    {
-        $response = parent::handle($request, $next);
-
-        if ($response instanceof RedirectResponse && (bool) $request->header('X-Inertia-Modal-Redirect-Back')) {
-            return back(303);
-        }
-
-        if (Inertia::getShared('isModal')) {
-            $response->headers->set('X-Inertia-Modal', true);
-        }
-
-        return $response;
-    }
-
-    public function share(Request $request)
-    {
-        return array_merge(parent::share($request), [
-            'isModal' => (bool) $request->header('X-Inertia-Modal'),
-        ]);
-    }
+//...
 }
 ```
 
 ## Usage
 
-Since we added the `ComponentModal` component, the global `$inertia` object now has a `visitInModal` method. This allows you to make an Inertia visit that loads into the modal.
+Since we added the `InertiaModal` component, the global `$inertia` object now has a `visitInModal` method. This allows you to make an Inertia visit that loads into the modal.
 
 You can use this method, for example, in the `@click` handler of a button:
 

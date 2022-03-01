@@ -1,0 +1,21 @@
+{
+    "name": "tofandel/inertia-vue-modal",
+    "description": "Display any inertia page in a modal",
+    "type": "library",
+    "require": {
+        "php": ">=7.4",
+        "inertiajs/inertia-laravel": ">=0.5"
+    },
+    "license": "GPL-3.0-or-later",
+    "autoload": {
+        "psr-4": {
+            "Tofandel\\InertiaVueModal\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Tofandel",
+            "email": "adrien.foulon@tukan.hu"
+        }
+    ]
+}
