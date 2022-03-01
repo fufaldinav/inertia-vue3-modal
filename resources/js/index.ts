@@ -1,1 +1,1 @@
-export {default as InertiaModal} from './InertiaModal';
+export {default as InertiaModal} from './InertiaModal.vue';

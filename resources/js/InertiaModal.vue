@@ -45,7 +45,7 @@ interface ModalRef {
 }
 
 const telRef = ref(null);
-const modal = shallowRef(null as ModalRef);
+const modal = shallowRef<null | ModalRef>(null);
 
 const close = () => {
   if (modal.value) {
