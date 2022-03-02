@@ -106,9 +106,9 @@ const visitInModal = (url: string, options: VisitOptions & {redirectBack?: boole
   });
 };
 
-watch(() => props.modalKey, () => {
-  const fn = `visitInModal${props.modalKey}`;
+watch(() => props.modalKey, (key) => {
+  const fn = `visitInModal${key}`;
   // @ts-ignore
   Inertia[fn] = visitInModal;
-});
+}, { immediate: true });
 </script>
