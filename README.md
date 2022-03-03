@@ -47,6 +47,24 @@ import { InertiaModal } from "@tofandel/inertia-vue-modal";
 </script>
 ```
 
+##### Axios dependency
+
+It's very important that your project only uses one version of axios because of the use of interceptors, if you use webpack and your packages have conflicting versions of axios they will each be bundled separately and interceptors won't work
+To resolve this issue make sure that you add this to your webpack.config.js
+```js
+const path = require('path');
+
+module.exports = {
+  resolve: {
+    alias: {
+      //...
+      'axios': path.resolve('node_modules/axios/dist/axios.js'),
+    },
+  },
+  //...
+}
+```
+
 ### Server-side installation
 
 In your Laravel application, you need to extend our HandlesInertiaModalRequest middleware
@@ -78,14 +96,12 @@ You can use this method, for example, in the `@click` handler of a button:
 Instead of using the method in your template, you can also use it in your script:
 
 ```vue
-<script>
-export default {
-  methods: {
-    openModal() {
-      this.$inertia.visitInModal('/user/create');
-    },
-  },
-};
+
+<script setup>
+import { Inertia } from "@inertiajs/inertia";
+Inertia.visitInModal('/user/create', {
+  // Visit options
+});
 </script>
 ```
 
@@ -109,17 +125,14 @@ In most cases, the `/user/create` endpoint renders a form that's wrapped into a 
   </app-layout>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      form: this.$inertia.form({
-        name: "",
-        email: "",
-      }),
-    };
-  },
-};
+
+<script setup>
+import { useForm } from '@inertiajs/inertia-vue3';
+
+const form = useForm({
+  name: "",
+  email: "",
+});
 </script>
 ```
 
@@ -132,18 +145,19 @@ To accomplish this, you need to do three things:
 3. Move the `form` to a separate `#toModal` template and replace it with a `ToModal` component.
 
 ```vue
+
 <template>
   <!-- the new Modalable root component -->
-  <Modalable :is-modal="isModal">
+  <ModalableWrapper>
     <!-- the 'old' root component -->
     <app-layout>
       <form-panel>
         <!-- the previous location of the form, replaced by the ToModal component -->
-        <ToModal />
+        <ModalSlot />
       </form-panel>
     </app-layout>
 
-    <template #toModal>
+    <template #modal>
       <!-- the 'new' location of the form -->
       <form @submit.prevent="form.post('/user.store')">
         <input type="text" v-model="form.name">
@@ -152,28 +166,17 @@ To accomplish this, you need to do three things:
         <button type="submit">Login</button>
       </form>
     </template>
-  </Modalable>
+  </ModalableWrapper>
 </template>
 
-<script>
-import { IsModalable } from "@protonemedia/inertia-vue-modal-poc"
+<script setup>
+import { ModalableWrapper, ModalSlot } from "@tofandel/inertia-vue-modal";
+import { useForm } from '@inertiajs/inertia-vue3';
 
-export default {
-  mixins: [IsModalable],
-
-  components: {
-    Modalable
-  },
-
-  data() {
-    return {
-      form: this.$inertia.form({
-        name: "",
-        email: "",
-      }),
-    };
-  },
-};
+const form = useForm({
+  name: "",
+  email: "",
+});
 </script>
 ```
 
@@ -197,7 +200,9 @@ You might not always want to route to the detail page. Luckily, you don't have t
 The `visitInModal` method accepts a second argument that can either a Boolean or a callback. Instead of redirecting the user, the user stays on the same page, and you can manually handle the event with the callback. This callback is executed after a successful request, for example, when the new user is stored in the database.
 
 ```javascript
-this.$inertia.visitInModal('/user/create', (event) => {
-  // do something
+this.$inertia.visitInModal('/user/create', {
+  redirectBack: (evt) => {
+    // Do something
+  },
 });
 ```
