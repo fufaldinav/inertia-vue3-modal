@@ -19,6 +19,7 @@ npm i vendor/tofandel/inertia-vue-modal
 In your layout, you need to add the `InertiaModal` component, here is an example using the Quasar Dialog
 
 ```vue
+
 <template>
   <div class="min-h-screen">
     <nav></nav>
@@ -29,13 +30,13 @@ In your layout, you need to add the `InertiaModal` component, here is an example
     </main>
 
     <InertiaModal>
-      <template #default="{contentRef, close, bind}">
+      <template #default="{close, props}">
         <QDialog
             :model-value="true"
-            v-bind="bind"
+            v-bind="props/* props contains the modalProps option */"
             @update:model-value="close"
         >
-          <div :ref="contentRef" />
+          <ModalSlot />
         </QDialog>
       </template>
     </InertiaModal>
@@ -43,7 +44,7 @@ In your layout, you need to add the `InertiaModal` component, here is an example
 </template>
 
 <script setup>
-import { InertiaModal } from "@tofandel/inertia-vue-modal";
+import { InertiaModal, ModalSlot } from "@tofandel/inertia-vue-modal";
 </script>
 ```
 
@@ -101,6 +102,15 @@ Instead of using the method in your template, you can also use it in your script
 import { Inertia } from "@inertiajs/inertia";
 Inertia.visitInModal('/user/create', {
   // Visit options
+  
+  // This is passed as additional page props to the page component of your modal
+  pageProps: {
+    componentProps1: 'page',
+  },
+  // This is passed as `props` in the InertiaModal default template
+  modalProps: {
+    modalProps1: 'modal',
+  }
 });
 </script>
 ```
@@ -150,13 +160,20 @@ To accomplish this, you need to do three things:
   <!-- the new Modalable root component -->
   <ModalableWrapper>
     <!-- the 'old' root component -->
-    <app-layout>
-      <form-panel>
+    <QLayout>
+      <QPageContainer>
         <!-- the previous location of the form, replaced by the ToModal component -->
         <ModalSlot />
-      </form-panel>
-    </app-layout>
+      </QPageContainer>
+    </QLayout>
 
+    <template #modal-only>
+      <QCard>
+        <QCardSection>
+          <ModalSlot />
+        </QCardSection>
+      </QCard>
+    </template>
     <template #modal>
       <!-- the 'new' location of the form -->
       <form @submit.prevent="form.post('/user.store')">
@@ -172,6 +189,12 @@ To accomplish this, you need to do three things:
 <script setup>
 import { ModalableWrapper, ModalSlot } from "@tofandel/inertia-vue-modal";
 import { useForm } from '@inertiajs/inertia-vue3';
+
+// This is where pageProps is received
+defineProps({
+  componentProps1: String,
+  otherRenderProps: null,
+});
 
 const form = useForm({
   name: "",

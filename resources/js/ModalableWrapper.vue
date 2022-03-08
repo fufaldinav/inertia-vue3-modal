@@ -1,22 +1,27 @@
 <template>
-  <template v-if="!inModal">
-  <slot></slot>
-  <Teleport :to="teleportRef">
+  <slot v-if="!inModal">
+    <ModalSlot/>
+  </slot>
+  <slot v-else name="modal-only">
+    <ModalSlot/>
+  </slot>
+  <Teleport v-if="telRef" :to="telRef">
     <slot name="modal" />
   </Teleport>
-  </template>
-  <slot v-else name="toModal" />
 </template>
 
 <script setup lang="ts">
-import { provide, shallowRef } from 'vue';
 import isModal from './isModal';
+import ModalSlot from './ModalSlot.vue';
+import { provider } from './useModalSlot';
 
-const teleportRef = shallowRef<Element | null>(null);
-
-provide('ModalSlotRef', (el: Element) => {
-  teleportRef.value = el;
-});
+const telRef = provider();
 
 const inModal = isModal();
+</script>
+
+<script lang="ts">
+export default {
+  name: 'ModalableWrapper',
+};
 </script>

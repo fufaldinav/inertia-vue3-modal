@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "declaration": true,
+    "outDir": "types",
     "target": "es5",
     "module": "esnext",
     "strict": true,
@@ -33,6 +35,6 @@
     "tests/**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
-  ]
+    "node_modules",
+  ],
 }

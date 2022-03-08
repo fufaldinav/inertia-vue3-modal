@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = {
   root: true,
   env: {
@@ -11,7 +13,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
   },
-  ignorePatterns: ['vendor', 'src', 'dist'],
+  ignorePatterns: ['vendor', 'src', 'dist', 'types'],
   rules: {
     'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
@@ -20,5 +22,6 @@ module.exports = {
     'no-param-reassign': ['error', { props: true, ignorePropertyModificationsFor: ['event'] }],
     'max-len': ['error', 140],
     '@typescript-eslint/ban-ts-comment': 'off',
+    'import/no-extraneous-dependencies': ['error', { packageDir: [path.resolve('./'), path.resolve('./node_modules/@inertiajs/inertia')] }],
   },
 };

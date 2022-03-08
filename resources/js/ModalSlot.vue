@@ -3,7 +3,13 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue';
+import { injector } from './useModalSlot';
 
-const ref = inject('ModalSlotRef');
+const ref = injector();
+</script>
+
+<script lang="ts">
+export default {
+  name: 'ModalSlot',
+};
 </script>

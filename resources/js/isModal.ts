@@ -1,4 +1,5 @@
 import { inject } from 'vue';
 import { injectIsModal } from './symbols';
+import { ModalRef } from './types';
 
-export default () => inject(injectIsModal, false);
+export default (): false | ModalRef => inject(injectIsModal, false);

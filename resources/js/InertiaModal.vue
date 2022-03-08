@@ -5,9 +5,8 @@
         :loading="modal.loading"
         :component="modal.component"
         :page="modal.page"
-        :content-ref="(elm) => telRef = elm"
         :close="close"
-        :bind="modal.bind"
+        :props="modal.props"
     />
     <Teleport
         v-if="modal.component && telRef"
@@ -16,22 +15,27 @@
       <Component
           is-modal
           :is="modal.component"
-          v-bind="modal.page.props"
+          v-bind="{...modal.page.props, ...modal.pageProps}"
       />
     </Teleport>
   </template>
 </template>
 
 <script lang="ts" setup>
-import { Inertia, VisitOptions } from '@inertiajs/inertia';
+import { Inertia, Page, VisitOptions } from '@inertiajs/inertia';
 import Axios, { CancelTokenSource } from 'axios';
 import Cancel from 'axios/lib/cancel/Cancel';
 import {
-  provide, Ref, ref, shallowRef, watch,
+  provide, shallowRef, watch,
 } from 'vue';
-import { GlobalEventCallback } from '@inertiajs/inertia/types/types.d';
+import {
+  GlobalEvent,
+  GlobalEventResult,
+} from '@inertiajs/inertia/types/types.d';
+import { ModalRef } from './types';
 import uniqueId from './uniqueId';
 import { injectIsModal, modalHeader } from './symbols';
+import { provider } from './useModalSlot';
 
 const props = defineProps({
   component: String,
@@ -42,29 +46,11 @@ const props = defineProps({
   },
 });
 
-interface VoidFunction {
-  (): void;
-}
+const modal: ModalRef = shallowRef(null);
 
-interface ModalRef {
-  loading: false,
-  component: unknown,
-  removeBeforeEventListener: VoidFunction,
-  removeSuccessEventListener?: VoidFunction,
-  interceptor: number,
-  page: object,
-  bind: object,
-}
+const telRef = provider();
 
-interface ModalRefLoading {
-  cancelToken: Ref<CancelTokenSource | null>,
-  loading: true,
-}
-
-const telRef = ref(null);
-const modal = shallowRef<null | ModalRef | ModalRefLoading>(null);
-
-provide(injectIsModal, true);
+provide(injectIsModal, modal);
 
 const close = () => {
   if (modal.value && !modal.value.loading) {
@@ -82,26 +68,31 @@ const close = () => {
 
 const visitInModal = (
   url: string,
-  options: VisitOptions & {redirectBack?: boolean | GlobalEventCallback<'success'>, modalProps?: object},
+  options: VisitOptions & {
+    redirectBack?: boolean | ((event: GlobalEvent<'success'>) => GlobalEventResult<'success'>),
+    modalProps?: object,
+    pageProps?: object
+  } = {},
 ) => {
   const opts = {
-    headers: {}, redirectBack: true, modalProps: {}, ...options,
+    headers: {}, redirectBack: true, modalProps: {}, pageProps: {}, ...options,
   };
 
   const currentId = uniqueId();
 
   const interceptor = Axios.interceptors.response.use((response) => {
     if (response.headers[modalHeader.toLowerCase()] === currentId) {
-      const page = response.data;
-      // @ts-ignore
+      const page: Page = response.data;
+
+      // @ts-ignore Protected but we have to use it, no other way
       Promise.resolve(Inertia.resolveComponent(page.component)).then((component) => {
-        const clone = JSON.parse(JSON.stringify(page));
-        // @ts-ignore
+        // @ts-ignore Protected but we have to use it, no other way
         Inertia.finishVisit(Inertia.activeVisit);
-        let removeSuccessEventListener = null;
+        let removeSuccessEventListener;
         const removeBeforeEventListener = Inertia.on('before', (event) => {
           // make sure the backend knows we're requesting from within a modal
           event.detail.visit.headers[modalHeader] = currentId;
+          event.detail.visit.headers['X-Inertia-Partial-Component'] = page.component;
           if (opts.redirectBack) {
             event.detail.visit.headers[
               'X-Inertia-Modal-Redirect-Back'
@@ -117,15 +108,16 @@ const visitInModal = (
           removeBeforeEventListener,
           removeSuccessEventListener,
           interceptor,
-          page: clone,
-          bind: opts.modalProps,
+          page,
+          props: opts.modalProps,
+          pageProps: opts.pageProps,
         };
       });
       return Promise.reject(new Cancel());
     }
     return response;
   });
-  const cancelToken = ref<CancelTokenSource | null>(null);
+  const cancelToken = shallowRef<CancelTokenSource | null>(null);
   Inertia.visit(url, {
     ...opts,
     onCancelToken: (token) => {
@@ -141,4 +133,10 @@ watch(() => props.modalKey, (key) => {
   // @ts-ignore
   Inertia[fn] = visitInModal;
 }, { immediate: true });
+</script>
+
+<script lang="ts">
+export default {
+  name: 'InertiaModal',
+};
 </script>

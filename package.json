@@ -1,23 +1,25 @@
 {
   "name": "@tofandel/inertia-vue-modal",
-  "version": "0.1.8",
+  "version": "0.2.11",
   "private": false,
   "description": "Load any inertia route into a modal",
   "author": "Adrien Foulon",
   "scripts": {
-    "build": "vue-cli-service build --target lib resources/js/index.ts",
+    "build": "vue-cli-service build --target lib resources/js/index.ts && tsc --emitDeclarationOnly",
     "lint": "vue-cli-service lint resources",
     "lint:fix": "vue-cli-service lint . --fix",
     "prepublish": "npm run build"
   },
   "main": "dist/inertia-vue-modal.umd.min.js",
+  "types": "types/index.d.ts",
   "files": [
     "dist/*",
-    "resources/*"
+    "resources/*",
+    "src/*"
   ],
   "dependencies": {
     "@inertiajs/inertia": "^0.11.0",
-    "axios": "^0.21.4",
+    "@inertiajs/inertia-vue3": "^0.6.0",
     "vue": "^3"
   },
   "devDependencies": {
