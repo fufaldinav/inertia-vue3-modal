@@ -11,6 +11,7 @@ export interface ModalObj {
   component: unknown,
   removeBeforeEventListener: VoidFunction,
   removeSuccessEventListener?: VoidFunction,
+  cancelToken: ShallowRef<CancelTokenSource | null>,
   interceptor: number,
   page: Page,
   props: object,

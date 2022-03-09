@@ -61,7 +61,8 @@ const close = () => {
       modal.value.removeSuccessEventListener();
     }
     Axios.interceptors.response.eject(modal.value.interceptor);
-  } else if (modal.value && modal.value.cancelToken.value) {
+  }
+  if (modal.value && modal.value.cancelToken.value) {
     modal.value.cancelToken.value.cancel('Modal closed');
   }
   modal.value = null;
@@ -78,6 +79,7 @@ const visitInModal = (
   const opts = {
     headers: {}, redirectBack: true, modalProps: {}, pageProps: {}, ...options,
   };
+  const cancelToken = shallowRef<CancelTokenSource | null>(null);
 
   const hrefToUrl = (href: string|URL): URL => new URL(href.toString(), window.location.toString());
 
@@ -92,17 +94,18 @@ const visitInModal = (
       if (lastVisit?.only && lastPage.component === page.component) {
         page.props = { ...lastPage.props, ...page.props };
       }
+      const { onError, onSuccess, errorBag } = lastVisit ? Inertia.activeVisit : opts;
 
       // @ts-ignore Protected but we have to use it, no other way
       Promise.resolve(Inertia.resolveComponent(page.component)).then((component) => {
         const errors = page.props.errors || {};
         if (Object.keys(errors).length > 0) {
-          const scopedErrors = opts.errorBag ? errors[opts.errorBag] || {} : errors;
+          const scopedErrors = errorBag ? errors[errorBag] || {} : errors;
           fireErrorEvent(scopedErrors);
-          if (opts.onError) opts.onError(scopedErrors);
+          if (onError) onError(scopedErrors);
         } else {
           fireSuccessEvent(page);
-          if (opts.onSuccess) opts.onSuccess(page);
+          if (onSuccess) onSuccess(page);
         }
         return component;
       }).then((component) => {
@@ -142,6 +145,7 @@ const visitInModal = (
           removeSuccessEventListener,
           interceptor,
           page,
+          cancelToken,
           props: opts.modalProps,
           pageProps: opts.pageProps,
         };
@@ -150,7 +154,6 @@ const visitInModal = (
     }
     return response;
   });
-  const cancelToken = shallowRef<CancelTokenSource | null>(null);
   Inertia.visit(url, {
     ...opts,
     onCancelToken: (token) => {
