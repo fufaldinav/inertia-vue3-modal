@@ -114,7 +114,7 @@ const visitInModal = (
         }
         const removeBeforeEventListener = Inertia.on('before', (event) => {
           // Subsequent visit of the modal url will stay in the modal
-          if (event.detail.visit.url === page.url) {
+          if (event.detail.visit.url.pathname === page.url.pathname) {
             // make sure the backend knows we're requesting from within a modal
             event.detail.visit.headers[modalHeader] = currentId;
             lastVisit = event.detail.visit;
