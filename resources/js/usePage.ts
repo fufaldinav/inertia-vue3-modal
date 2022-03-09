@@ -4,15 +4,16 @@ import isModal from './isModal';
 
 export default () => {
   const modal = isModal();
+  const parent = usePage();
   if (modal && modal.value) {
     return {
       isModal: true,
-      parent: usePage(),
+      parent,
       props: computed(() => modal.value && !modal.value.loading && modal.value.page.props),
       url: computed(() => modal.value && !modal.value.loading && modal.value.page.url),
       component: computed(() => modal.value && !modal.value.loading && modal.value.page.component),
       version: computed(() => modal.value && !modal.value.loading && modal.value.page.version),
     };
   }
-  return usePage();
+  return parent;
 };

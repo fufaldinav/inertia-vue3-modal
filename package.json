@@ -1,6 +1,6 @@
 {
   "name": "@tofandel/inertia-vue-modal",
-  "version": "0.2.11",
+  "version": "0.2.14",
   "private": false,
   "description": "Load any inertia route into a modal",
   "author": "Adrien Foulon",
@@ -15,7 +15,8 @@
   "files": [
     "dist/*",
     "resources/*",
-    "src/*"
+    "src/*",
+    "types/*"
   ],
   "dependencies": {
     "@inertiajs/inertia": "^0.11.0",

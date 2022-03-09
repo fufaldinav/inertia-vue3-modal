@@ -19,7 +19,7 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
     quotes: ['error', 'single', { avoidEscape: true }],
     'no-plusplus': 'off',
-    'no-param-reassign': ['error', { props: true, ignorePropertyModificationsFor: ['event'] }],
+    'no-param-reassign': ['error', { props: true, ignorePropertyModificationsFor: ['event', 'config'] }],
     'max-len': ['error', 140],
     '@typescript-eslint/ban-ts-comment': 'off',
     'import/no-extraneous-dependencies': ['error', { packageDir: [path.resolve('./'), path.resolve('./node_modules/@inertiajs/inertia')] }],
