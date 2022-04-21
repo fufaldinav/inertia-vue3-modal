@@ -5,7 +5,7 @@
         :loading="modal.loading"
         :component="modal.component"
         :page="modal.page"
-        :close="close"
+        :close="modal.close"
         :props="modal.props"
     />
     <Teleport
@@ -21,7 +21,7 @@
   </template>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 import { Inertia, Page, VisitOptions } from '@inertiajs/inertia';
 import Axios, { CancelTokenSource } from 'axios';
 import Cancel from 'axios/lib/cancel/Cancel';
@@ -148,6 +148,7 @@ const visitInModal = (
           cancelToken,
           props: opts.modalProps,
           pageProps: opts.pageProps,
+          close,
         };
       });
       return Promise.reject(new Cancel());
@@ -161,7 +162,7 @@ const visitInModal = (
     },
     headers: { ...opts.headers, [modalHeader]: currentId },
   });
-  modal.value = { loading: true, cancelToken };
+  modal.value = { loading: true, cancelToken, close };
 };
 
 watch(() => props.modalKey, (key) => {

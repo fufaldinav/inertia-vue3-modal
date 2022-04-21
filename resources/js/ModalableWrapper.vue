@@ -2,11 +2,11 @@
   <slot v-if="!inModal">
     <ModalSlot/>
   </slot>
-  <slot v-else name="modal-only">
+  <slot v-else name="modal-only" :close="inModal.close">
     <ModalSlot/>
   </slot>
   <Teleport v-if="telRef" :to="telRef">
-    <slot name="modal" />
+    <slot name="modal" :close="inModal.close"/>
   </Teleport>
 </template>
 
