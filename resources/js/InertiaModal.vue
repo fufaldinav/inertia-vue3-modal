@@ -22,7 +22,9 @@
 </template>
 
 <script setup lang="ts">
-import { Inertia, Page, VisitOptions } from '@inertiajs/inertia';
+import {
+  Inertia, Page, Visit, VisitOptions,
+} from '@inertiajs/inertia';
 import Axios, { CancelTokenSource } from 'axios';
 import Cancel from 'axios/lib/cancel/Cancel';
 import {
@@ -33,7 +35,7 @@ import {
   GlobalEventResult,
 } from '@inertiajs/inertia/types/types.d';
 import { fireErrorEvent, fireSuccessEvent } from './events';
-import { ModalRef } from './types';
+import { ModalRef, ModalLoading } from './types';
 import uniqueId from './uniqueId';
 import { injectIsModal, modalHeader } from './symbols';
 import { provider } from './useModalSlot';
@@ -65,6 +67,7 @@ const close = () => {
   if (modal.value && modal.value.cancelToken.value) {
     modal.value.cancelToken.value.cancel('Modal closed');
   }
+  document.dispatchEvent(new CustomEvent('inertia:modal-closed', { detail: modal.value }));
   modal.value = null;
 };
 
@@ -73,7 +76,7 @@ const visitInModal = (
   options: VisitOptions & {
     redirectBack?: boolean | ((event: GlobalEvent<'success'>) => GlobalEventResult<'success'>),
     modalProps?: object,
-    pageProps?: object
+    pageProps?: object,
   } = {},
 ) => {
   const opts = {
@@ -85,15 +88,16 @@ const visitInModal = (
 
   const currentId = uniqueId();
   let lastPage: Page | undefined;
-  let lastVisit = null;
+  let lastVisit: Visit | null = null;
 
   const interceptor = Axios.interceptors.response.use((response) => {
     if (response.headers[modalHeader.toLowerCase()] === currentId) {
       const page = response.data;
       page.url = hrefToUrl(page.url);
-      if (lastVisit?.only && lastPage.component === page.component) {
+      if (lastVisit?.only && lastPage && lastPage.component === page.component) {
         page.props = { ...lastPage.props, ...page.props };
       }
+      // @ts-ignore Protected but we have to use it, no other way
       const { onError, onSuccess, errorBag } = lastVisit ? Inertia.activeVisit : opts;
 
       // @ts-ignore Protected but we have to use it, no other way
@@ -112,7 +116,7 @@ const visitInModal = (
         // @ts-ignore Protected but we have to use it, no other way
         Inertia.finishVisit(Inertia.activeVisit);
         let removeSuccessEventListener;
-        if (modal.value.removeBeforeEventListener) {
+        if (modal.value && 'removeBeforeEventListener' in modal.value) {
           modal.value.removeBeforeEventListener();
         }
         const removeBeforeEventListener = Inertia.on('before', (event) => {
@@ -162,7 +166,7 @@ const visitInModal = (
     },
     headers: { ...opts.headers, [modalHeader]: currentId },
   });
-  modal.value = { loading: true, cancelToken, close };
+  modal.value = { loading: true, cancelToken, close } as ModalLoading;
 };
 
 watch(() => props.modalKey, (key) => {

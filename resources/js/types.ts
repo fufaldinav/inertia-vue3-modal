@@ -16,6 +16,7 @@ export interface ModalObj {
   page: Page,
   props: object,
   pageProps: object,
+  close: VoidFunction,
 }
 
 export interface ModalLoading {
