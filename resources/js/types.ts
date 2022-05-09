@@ -14,6 +14,7 @@ export interface ModalObj {
   cancelToken: ShallowRef<CancelTokenSource | null>,
   interceptor: number,
   page: Page,
+  onClose: (details: ModalObj) => void | undefined,
   props: object,
   pageProps: object,
   close: VoidFunction,

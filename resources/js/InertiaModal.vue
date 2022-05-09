@@ -35,7 +35,9 @@ import {
   GlobalEventResult,
 } from '@inertiajs/inertia/types/types.d';
 import { fireErrorEvent, fireSuccessEvent } from './events';
-import { ModalRef, ModalLoading } from './types';
+import {
+  ModalRef, ModalLoading, ModalObj,
+} from './types';
 import uniqueId from './uniqueId';
 import { injectIsModal, modalHeader } from './symbols';
 import { provider } from './useModalSlot';
@@ -56,16 +58,21 @@ const telRef = provider();
 provide(injectIsModal, modal);
 
 const close = () => {
-  if (modal.value && !modal.value.loading) {
-    // remove the 'x-inertia-modal' and 'x-inertia-modal-redirect-back' headers for future requests
-    modal.value.removeBeforeEventListener();
-    if (modal.value.removeSuccessEventListener) {
-      modal.value.removeSuccessEventListener();
+  if (modal.value) {
+    if (!modal.value.loading) {
+      // remove the 'x-inertia-modal' and 'x-inertia-modal-redirect-back' headers for future requests
+      modal.value.removeBeforeEventListener();
+      if (modal.value.removeSuccessEventListener) {
+        modal.value.removeSuccessEventListener();
+      }
+      Axios.interceptors.response.eject(modal.value.interceptor);
     }
-    Axios.interceptors.response.eject(modal.value.interceptor);
-  }
-  if (modal.value && modal.value.cancelToken.value) {
-    modal.value.cancelToken.value.cancel('Modal closed');
+    if (modal.value.cancelToken.value) {
+      modal.value.cancelToken.value.cancel('Modal closed');
+    }
+    if ('onClose' in modal.value && modal.value.onClose) {
+      modal.value.onClose(modal.value);
+    }
   }
   document.dispatchEvent(new CustomEvent('inertia:modal-closed', { detail: modal.value }));
   modal.value = null;
@@ -77,6 +84,7 @@ const visitInModal = (
     redirectBack?: boolean | ((event: GlobalEvent<'success'>) => GlobalEventResult<'success'>),
     modalProps?: object,
     pageProps?: object,
+    onClose?: (details: ModalObj) => void,
   } = {},
 ) => {
   const opts = {
@@ -150,6 +158,7 @@ const visitInModal = (
           interceptor,
           page,
           cancelToken,
+          onClose: opts.onClose,
           props: opts.modalProps,
           pageProps: opts.pageProps,
           close,
