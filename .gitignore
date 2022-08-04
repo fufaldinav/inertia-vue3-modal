@@ -1,6 +1,6 @@
 /vendor/
 /node_modules/
-/dist/
+/dist/demo.html
 composer.lock
 package-lock.json
 types
