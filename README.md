@@ -12,8 +12,7 @@ This POC is a very early draft, so these limitations will probably be fixed soon
 ### Client-side installation
 
 ```bash
-composer require tofandel/inertia-vue-modal
-npm i vendor/tofandel/inertia-vue-modal
+composer require tofandel/inertia-vue-modal && npm i vendor/tofandel/inertia-vue-modal
 ```
 
 In your layout, you need to add the `InertiaModal` component, here is an example using the Quasar Dialog
