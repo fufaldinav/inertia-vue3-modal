@@ -120,18 +120,16 @@ In most cases, the `/user/create` endpoint renders a form that's wrapped into a 
 
 ```vue
 <template>
-  <!-- app-layout provides the sidebar navigation and footer -->
-  <app-layout>
-    <!-- form-panel provides a nice padding and shadow -->
-    <form-panel>
+  <QLayout>
+    <QPageContainer>
       <form @submit.prevent="form.post('/user/store')">
         <input type="text" v-model="form.name">
         <input type="email" v-model="form.email">
 
         <button type="submit">Login</button>
       </form>
-    </form-panel>
-  </app-layout>
+    <QPageContainer>
+  </QLayout>
 </template>
 
 
@@ -159,21 +157,25 @@ To accomplish this, you need to do three things:
   <!-- the new Modalable root component -->
   <ModalableWrapper>
     <!-- the 'old' root component -->
+    <!-- This will be wrapped around the #modal template but only when NOT within a modal -->
     <QLayout>
       <QPageContainer>
-        <!-- the previous location of the form, replaced by the ToModal component -->
+        <!-- the previous location of the form, replaced by the ModalSlot component, which will render the #modal template -->
         <ModalSlot />
       </QPageContainer>
     </QLayout>
 
     <template #modal-only>
+      <!-- This will be wrapped around the #modal template but only when within a modal -->
       <QCard>
         <QCardSection>
+          <!-- will render the #modal template -->
           <ModalSlot />
         </QCardSection>
       </QCard>
     </template>
     <template #modal>
+      <!-- This is the content that is always shown -->
       <!-- the 'new' location of the form -->
       <form @submit.prevent="form.post('/user.store')">
         <input type="text" v-model="form.name">
