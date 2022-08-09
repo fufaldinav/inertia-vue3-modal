@@ -240,6 +240,7 @@ __webpack_require__.d(__webpack_exports__, {
   "InertiaModal": () => (/* reexport */ InertiaModal),
   "ModalSlot": () => (/* reexport */ ModalSlot),
   "ModalableWrapper": () => (/* reexport */ ModalableWrapper),
+  "getModal": () => (/* reexport */ isModal),
   "usePage": () => (/* reexport */ usePage)
 });
 
@@ -817,6 +818,7 @@ var inertia_vue3_ = __webpack_require__(365);
 });
 
 ;// CONCATENATED MODULE: ./resources/js/index.ts
+
 
 
 
