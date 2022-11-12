@@ -26,7 +26,6 @@ import {
   Inertia, Page, Visit, VisitOptions,
 } from '@inertiajs/inertia';
 import Axios, { CancelTokenSource } from 'axios';
-import Cancel from 'axios/lib/cancel/Cancel';
 import {
   provide, shallowRef, watch,
 } from 'vue';
@@ -90,6 +89,7 @@ const visitInModal = (
   const opts = {
     headers: {}, redirectBack: true, modalProps: {}, pageProps: {}, ...options,
   };
+
   const cancelToken = shallowRef<CancelTokenSource | null>(null);
 
   const hrefToUrl = (href: string|URL): URL => new URL(href.toString(), window.location.toString());
@@ -97,6 +97,9 @@ const visitInModal = (
   const currentId = uniqueId();
   let lastPage: Page | undefined;
   let lastVisit: Visit | null = null;
+
+  opts.modalProps = {id: currentId, ...opts.modalProps};
+
 
   const interceptor = Axios.interceptors.response.use((response) => {
     if (response.headers[modalHeader.toLowerCase()] === currentId) {
@@ -111,6 +114,7 @@ const visitInModal = (
       // @ts-ignore Protected but we have to use it, no other way
       Promise.resolve(Inertia.resolveComponent(page.component)).then((component) => {
         const errors = page.props.errors || {};
+
         if (Object.keys(errors).length > 0) {
           const scopedErrors = errorBag ? errors[errorBag] || {} : errors;
           fireErrorEvent(scopedErrors);
@@ -162,9 +166,9 @@ const visitInModal = (
           props: opts.modalProps,
           pageProps: opts.pageProps,
           close,
-        };
+          };
       });
-      return Promise.reject(new Cancel());
+      return Promise.reject(new Axios.Cancel());
     }
     return response;
   });
