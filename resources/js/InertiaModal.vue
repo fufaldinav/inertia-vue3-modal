@@ -4,7 +4,7 @@
       <slot name="default" :loading="modal.loading" :component="!modal.loading && modal.component"
         :page="!modal.loading && modal.page" :close="modal.close" :props="!modal.loading && modal.props" />
       <template #component>
-        <Component v-if="modal.component" is-modal :is="modal.component"
+        <Component v-if="!modal.loading && modal.component" is-modal :is="modal.component"
           v-bind="{ ...modal.page.props, ...modal.pageProps }" />
       </template>
     </InertiaModalWrapper>
@@ -13,19 +13,15 @@
 
 <script setup lang="ts">
 import {
-  Inertia, Page, Visit, VisitOptions,
+  Inertia, Page, Visit,
 } from '@inertiajs/inertia';
 import Axios, { CancelTokenSource } from 'axios';
 import {
   shallowReactive, shallowRef, watch,
 } from 'vue';
-import {
-  GlobalEvent,
-  GlobalEventResult,
-} from '@inertiajs/inertia/types/types.d';
 import { fireErrorEvent, fireSuccessEvent } from './events';
 import {
-  Id, ModalItem, ModalLoading, ModalObj,
+  Id, ModalItem, ModalLoading, ModalObj, VisitInModalFn, VisitModalOptions,
 } from './types';
 import { modalHeader } from './symbols';
 import uniqueId from './uniqueId';
@@ -67,12 +63,7 @@ const close = (id: Id) => {
 
 const visitInModal = (
   url: string,
-  options: VisitOptions & {
-    redirectBack?: boolean | ((event: GlobalEvent<'success'>) => GlobalEventResult<'success'>),
-    modalProps?: object,
-    pageProps?: object,
-    onClose?: (details: ModalObj) => void,
-  } = {},
+  options: VisitModalOptions = {},
 ) => {
   const opts = {
     headers: {}, redirectBack: true, modalProps: {}, pageProps: {}, ...options,
@@ -172,8 +163,7 @@ const visitInModal = (
 };
 
 watch(() => props.modalKey, (key) => {
-  const fn = `visitInModal${key}`;
-  // @ts-ignore
+  const fn: VisitInModalFn = `visitInModal${key}`;
   Inertia[fn] = visitInModal;
 }, { immediate: true });
 </script>

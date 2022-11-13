@@ -1,6 +1,6 @@
 import { ShallowRef } from 'vue';
 import { CancelTokenSource } from 'axios';
-import { Page } from '@inertiajs/inertia';
+import { GlobalEvent, GlobalEventResult, Page, VisitOptions } from '@inertiajs/inertia';
 
 export interface VoidFunction {
   (): void;
@@ -29,3 +29,12 @@ export interface ModalLoading {
 }
 
 export type ModalItem = ModalObj | ModalLoading
+
+export type VisitModalOptions = VisitOptions & {
+  redirectBack?: boolean | ((event: GlobalEvent<'success'>) => GlobalEventResult<'success'>),
+  modalProps?: object,
+  pageProps?: object,
+  onClose?: (details: ModalObj) => void,
+}
+
+export type VisitInModalFn = `visitInModal${string}`;
