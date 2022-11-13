@@ -1,23 +1,13 @@
 <template>
-  <template v-if="modal">
-    <slot
-        name="default"
-        :loading="modal.loading"
-        :component="modal.component"
-        :page="modal.page"
-        :close="modal.close"
-        :props="modal.props"
-    />
-    <Teleport
-        v-if="modal.component && telRef"
-        :to="telRef"
-    >
-      <Component
-          is-modal
-          :is="modal.component"
-          v-bind="{...modal.page.props, ...modal.pageProps}"
-      />
-    </Teleport>
+  <template v-for="[id, modal] in modals" :key="id">
+    <InertiaModalWrapper>
+      <slot name="default" :loading="modal.loading" :component="!modal.loading && modal.component"
+        :page="!modal.loading && modal.page" :close="modal.close" :props="!modal.loading && modal.props" />
+      <template #component>
+        <Component v-if="modal.component" is-modal :is="modal.component"
+          v-bind="{ ...modal.page.props, ...modal.pageProps }" />
+      </template>
+    </InertiaModalWrapper>
   </template>
 </template>
 
@@ -27,7 +17,7 @@ import {
 } from '@inertiajs/inertia';
 import Axios, { CancelTokenSource } from 'axios';
 import {
-  provide, shallowRef, watch,
+  shallowReactive, shallowRef, watch,
 } from 'vue';
 import {
   GlobalEvent,
@@ -35,11 +25,11 @@ import {
 } from '@inertiajs/inertia/types/types.d';
 import { fireErrorEvent, fireSuccessEvent } from './events';
 import {
-  ModalRef, ModalLoading, ModalObj,
+  Id, ModalItem, ModalLoading, ModalObj,
 } from './types';
+import { modalHeader } from './symbols';
 import uniqueId from './uniqueId';
-import { injectIsModal, modalHeader } from './symbols';
-import { provider } from './useModalSlot';
+import InertiaModalWrapper from './InertiaModalWrapper.vue';
 
 const props = defineProps({
   component: String,
@@ -50,31 +40,29 @@ const props = defineProps({
   },
 });
 
-const modal: ModalRef = shallowRef(null);
+const modals = shallowReactive<Map<Id, ModalItem>>(new Map());
 
-const telRef = provider();
+const close = (id: Id) => {
+  const modal = modals.get(id) ?? null
 
-provide(injectIsModal, modal);
-
-const close = () => {
-  if (modal.value) {
-    if (!modal.value.loading) {
+  if (modal) {
+    if (!modal.loading) {
       // remove the 'x-inertia-modal' and 'x-inertia-modal-redirect-back' headers for future requests
-      modal.value.removeBeforeEventListener();
-      if (modal.value.removeSuccessEventListener) {
-        modal.value.removeSuccessEventListener();
+      modal.removeBeforeEventListener();
+      if (modal.removeSuccessEventListener) {
+        modal.removeSuccessEventListener();
       }
-      Axios.interceptors.response.eject(modal.value.interceptor);
+      Axios.interceptors.response.eject(modal.interceptor);
     }
-    if (modal.value.cancelToken.value) {
-      modal.value.cancelToken.value.cancel('Modal closed');
+    if (modal.cancelToken.value) {
+      modal.cancelToken.value.cancel('Modal closed');
     }
-    if ('onClose' in modal.value && modal.value.onClose) {
-      modal.value.onClose(modal.value);
+    if ('onClose' in modal && modal.onClose) {
+      modal.onClose(modal);
     }
   }
-  document.dispatchEvent(new CustomEvent('inertia:modal-closed', { detail: modal.value }));
-  modal.value = null;
+  document.dispatchEvent(new CustomEvent('inertia:modal-closed', { detail: modal }));
+  modals.delete(id);
 };
 
 const visitInModal = (
@@ -97,9 +85,6 @@ const visitInModal = (
   const currentId = uniqueId();
   let lastPage: Page | undefined;
   let lastVisit: Visit | null = null;
-
-  opts.modalProps = {id: currentId, ...opts.modalProps};
-
 
   const interceptor = Axios.interceptors.response.use((response) => {
     if (response.headers[modalHeader.toLowerCase()] === currentId) {
@@ -128,8 +113,10 @@ const visitInModal = (
         // @ts-ignore Protected but we have to use it, no other way
         Inertia.finishVisit(Inertia.activeVisit);
         let removeSuccessEventListener;
-        if (modal.value && 'removeBeforeEventListener' in modal.value) {
-          modal.value.removeBeforeEventListener();
+
+        const currentModal = modals.get(currentId) ?? null
+        if (currentModal && 'removeBeforeEventListener' in currentModal) {
+          currentModal.removeBeforeEventListener();
         }
         const removeBeforeEventListener = Inertia.on('before', (event) => {
           // Subsequent visit of the modal url will stay in the modal
@@ -139,7 +126,7 @@ const visitInModal = (
             lastVisit = event.detail.visit;
             lastPage = page;
             const reqInterceptor = Axios.interceptors.request.use((config) => {
-              if (config.headers[modalHeader] === currentId) {
+              if (config?.headers?.[modalHeader] === currentId) {
                 Axios.interceptors.request.eject(reqInterceptor);
                 config.headers['X-Inertia-Partial-Component'] = page.component;
               }
@@ -154,7 +141,7 @@ const visitInModal = (
             }
           }
         });
-        modal.value = {
+        const modal: ModalObj = {
           loading: false,
           component,
           removeBeforeEventListener,
@@ -165,8 +152,9 @@ const visitInModal = (
           onClose: opts.onClose,
           props: opts.modalProps,
           pageProps: opts.pageProps,
-          close,
-          };
+          close: () => close(currentId),
+        };
+        modals.set(currentId, modal);
       });
       return Promise.reject(new Axios.Cancel());
     }
@@ -179,7 +167,8 @@ const visitInModal = (
     },
     headers: { ...opts.headers, [modalHeader]: currentId },
   });
-  modal.value = { loading: true, cancelToken, close } as ModalLoading;
+  const modal: ModalLoading = { loading: true, cancelToken, close: () => close(currentId) };
+  modals.set(currentId, modal);
 };
 
 watch(() => props.modalKey, (key) => {

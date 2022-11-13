@@ -6,6 +6,8 @@ export interface VoidFunction {
   (): void;
 }
 
+export type Id = string
+
 export interface ModalObj {
   loading: false,
   component: unknown,
@@ -14,15 +16,16 @@ export interface ModalObj {
   cancelToken: ShallowRef<CancelTokenSource | null>,
   interceptor: number,
   page: Page,
-  onClose: (details: ModalObj) => void | undefined,
+  onClose?: (details: ModalObj) => void,
   props: object,
   pageProps: object,
-  close: VoidFunction,
+  close: (id: Id) => void,
 }
 
 export interface ModalLoading {
   cancelToken: ShallowRef<CancelTokenSource | null>,
   loading: true,
+  close: (id: Id) => void,
 }
 
-export type ModalRef = ShallowRef<null | ModalObj | ModalLoading>
+export type ModalItem = ModalObj | ModalLoading
