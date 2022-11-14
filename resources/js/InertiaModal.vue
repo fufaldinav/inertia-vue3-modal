@@ -1,14 +1,13 @@
 <template>
-  <template v-for="[id, modal] in modals" :key="id">
-    <InertiaModalWrapper>
-      <slot name="default" :loading="modal.loading" :component="!modal.loading && modal.component"
-        :page="!modal.loading && modal.page" :close="modal.close" :props="!modal.loading && modal.props" />
-      <template #component>
-        <Component v-if="!modal.loading && modal.component" is-modal :is="modal.component"
-          v-bind="{ ...modal.page.props, ...modal.pageProps }" />
-      </template>
-    </InertiaModalWrapper>
-  </template>
+  <slot name="background" :active="modals.size > 0" />
+  <InertiaModalWrapper v-for="[id, modal] in modals" :key="id">
+    <slot name="default" :loading="modal.loading" :component="!modal.loading && modal.component"
+      :page="!modal.loading && modal.page" :close="modal.close" :props="!modal.loading && modal.props" />
+    <template #component>
+      <Component v-if="!modal.loading && modal.component" is-modal :is="modal.component"
+        v-bind="{ ...modal.page.props, ...modal.pageProps }" />
+    </template>
+  </InertiaModalWrapper>
 </template>
 
 <script setup lang="ts">
