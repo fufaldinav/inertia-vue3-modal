@@ -1,6 +1,8 @@
 import { ShallowRef } from 'vue';
 import { CancelTokenSource } from 'axios';
-import { GlobalEvent, GlobalEventResult, Page, VisitOptions } from '@inertiajs/inertia';
+import {
+  GlobalEvent, GlobalEventResult, Page, VisitOptions,
+} from '@inertiajs/inertia';
 
 export interface VoidFunction {
   (): void;

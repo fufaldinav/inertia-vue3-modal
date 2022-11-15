@@ -1,8 +1,8 @@
 <template>
   <slot name="background" :active="modals.size > 0" />
-  <InertiaModalWrapper v-for="[id, modal] in modals" :key="id">
-    <slot name="default" :loading="modal.loading" :component="!modal.loading && modal.component"
-      :page="!modal.loading && modal.page" :close="modal.close" :props="!modal.loading && modal.props" />
+  <InertiaModalWrapper v-for="[id, modal] in modals" :key="id" :modal="modal">
+    <slot name="default" :loading="modal.loading" :component="modal.component"
+      :page="modal.page" :close="modal.close" :props="modal.props" />
     <template #component>
       <Component v-if="!modal.loading && modal.component" is-modal :is="modal.component"
         v-bind="{ ...modal.page.props, ...modal.pageProps }" />
@@ -38,7 +38,7 @@ const props = defineProps({
 const modals = shallowReactive<Map<Id, ModalItem>>(new Map());
 
 const close = (id: Id) => {
-  const modal = modals.get(id) ?? null
+  const modal = modals.get(id) ?? null;
 
   if (modal) {
     if (!modal.loading) {
@@ -104,7 +104,7 @@ const visitInModal = (
         Inertia.finishVisit(Inertia.activeVisit);
         let removeSuccessEventListener;
 
-        const currentModal = modals.get(currentId) ?? null
+        const currentModal = modals.get(currentId) ?? null;
         if (currentModal && 'removeBeforeEventListener' in currentModal) {
           currentModal.removeBeforeEventListener();
         }
