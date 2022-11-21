@@ -16,7 +16,7 @@ import {
 } from '@inertiajs/inertia';
 import Axios, { CancelTokenSource } from 'axios';
 import {
-  shallowReactive, shallowRef, watch,
+  ref, shallowReactive, shallowRef, watch,
 } from 'vue';
 import { fireErrorEvent, fireSuccessEvent } from './events';
 import {
@@ -60,6 +60,9 @@ const close = (id: Id) => {
   modals.delete(id);
 };
 
+const lastPage = ref<Page | undefined>(undefined);
+const lastVisit = ref<Visit | null>(null);
+
 const visitInModal = (
   url: string,
   options: VisitModalOptions = {},
@@ -73,18 +76,17 @@ const visitInModal = (
   const hrefToUrl = (href: string|URL): URL => new URL(href.toString(), window.location.toString());
 
   const currentId = uniqueId();
-  let lastPage: Page | undefined;
-  let lastVisit: Visit | null = null;
+  const closeSelf = () => close(currentId);
 
   const interceptor = Axios.interceptors.response.use((response) => {
     if (response.headers[modalHeader.toLowerCase()] === currentId) {
       const page = response.data;
       page.url = hrefToUrl(page.url);
-      if (lastVisit?.only && lastPage && lastPage.component === page.component) {
-        page.props = { ...lastPage.props, ...page.props };
+      if (lastVisit.value?.only && lastPage.value && lastPage.value.component === page.component) {
+        page.props = { ...lastPage.value.props, ...page.props };
       }
       // @ts-ignore Protected but we have to use it, no other way
-      const { onError, onSuccess, errorBag } = lastVisit ? Inertia.activeVisit : opts;
+      const { onError, onSuccess, errorBag } = lastVisit.value ? Inertia.activeVisit : opts;
 
       // @ts-ignore Protected but we have to use it, no other way
       Promise.resolve(Inertia.resolveComponent(page.component)).then((component) => {
@@ -111,10 +113,13 @@ const visitInModal = (
         const removeBeforeEventListener = Inertia.on('before', (event) => {
           // Subsequent visit of the modal url will stay in the modal
           if (event.detail.visit.url.pathname === page.url.pathname) {
+            // delete event.detail.visit.headers[
+            //   'X-Inertia-Modal-Redirect-Back'
+            // ];
             // make sure the backend knows we're requesting from within a modal
             event.detail.visit.headers[modalHeader] = currentId;
-            lastVisit = event.detail.visit;
-            lastPage = page;
+            lastVisit.value = event.detail.visit;
+            lastPage.value = page;
             const reqInterceptor = Axios.interceptors.request.use((config) => {
               if (config?.headers?.[modalHeader] === currentId) {
                 Axios.interceptors.request.eject(reqInterceptor);
@@ -126,8 +131,13 @@ const visitInModal = (
             event.detail.visit.headers[
               'X-Inertia-Modal-Redirect-Back'
             ] = 'true';
+
             if (typeof opts.redirectBack === 'function') {
-              removeSuccessEventListener = Inertia.on('success', opts.redirectBack);
+              removeSuccessEventListener = Inertia.on('success', (event) => {
+                if (event.detail.page.props.modalId === currentId) {
+                  (opts.redirectBack as any)()
+                }
+              });
             }
           }
         });
@@ -142,7 +152,7 @@ const visitInModal = (
           onClose: opts.onClose,
           props: opts.modalProps,
           pageProps: opts.pageProps,
-          close: () => close(currentId),
+          close: closeSelf,
         };
         modals.set(currentId, modal);
       });
@@ -157,7 +167,7 @@ const visitInModal = (
     },
     headers: { ...opts.headers, [modalHeader]: currentId },
   });
-  const modal: ModalLoading = { loading: true, cancelToken, close: () => close(currentId) };
+  const modal: ModalLoading = { loading: true, cancelToken, close: closeSelf };
   modals.set(currentId, modal);
 };
 

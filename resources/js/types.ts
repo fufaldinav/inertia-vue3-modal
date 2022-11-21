@@ -21,13 +21,13 @@ export interface ModalObj {
   onClose?: (details: ModalObj) => void,
   props: object,
   pageProps: object,
-  close: (id: Id) => void,
+  close: () => void,
 }
 
 export interface ModalLoading {
   cancelToken: ShallowRef<CancelTokenSource | null>,
   loading: true,
-  close: (id: Id) => void,
+  close: () => void,
 }
 
 export type ModalItem = ModalObj | ModalLoading
