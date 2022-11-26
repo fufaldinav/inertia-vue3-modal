@@ -11,6 +11,7 @@ export interface VoidFunction {
 export type Id = string
 
 export interface ModalObj {
+  id: string;
   loading: false,
   component: unknown,
   removeBeforeEventListener: VoidFunction,
@@ -25,6 +26,7 @@ export interface ModalObj {
 }
 
 export interface ModalLoading {
+  id: string;
   cancelToken: ShallowRef<CancelTokenSource | null>,
   loading: true,
   close: () => void,

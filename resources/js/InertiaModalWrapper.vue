@@ -1,8 +1,10 @@
 <template>
-  <slot name="default" />
-  <Teleport v-if="telRef" :to="telRef">
-    <slot name="component" />
-  </Teleport>
+  <template v-if="modal">
+    <slot name="default" />
+    <Teleport v-if="modal.component && telRef" :to="telRef">
+      <slot name="component" />
+    </Teleport>
+  </template>
 </template>
 
 <script setup lang="ts">
