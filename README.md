@@ -4,8 +4,8 @@
 
 This POC is a very early draft, so these limitations will probably be fixed soon.
 
-* No support for nested modals (modal in modal)
-* It doesn't use browser history navigation
+- No support for nested modals (modal in modal)
+- It doesn't use browser history navigation
 
 ## Installation
 
@@ -18,7 +18,6 @@ composer require tofandel/inertia-vue-modal && npm i vendor/tofandel/inertia-vue
 In your layout, you need to add the `InertiaModal` component, here is an example using the Quasar Dialog
 
 ```vue
-
 <template>
   <div class="min-h-screen">
     <nav></nav>
@@ -29,11 +28,11 @@ In your layout, you need to add the `InertiaModal` component, here is an example
     </main>
 
     <InertiaModal>
-      <template #default="{close, props}">
+      <template #default="{ close, props }">
         <QDialog
-            :model-value="true"
-            v-bind="props/* props contains the modalProps option */"
-            @update:model-value="close"
+          :model-value="true"
+          v-bind="props /* props contains the modalProps option */"
+          @update:model-value="close"
         >
           <ModalSlot />
         </QDialog>
@@ -51,18 +50,19 @@ import { InertiaModal, ModalSlot } from "@tofandel/inertia-vue-modal";
 
 It's very important that your project only uses one version of axios because of the use of interceptors, if you use webpack and your packages have conflicting versions of axios they will each be bundled separately and interceptors won't work
 To resolve this issue make sure that you add this to your webpack.config.js
+
 ```js
-const path = require('path');
+const path = require("path");
 
 module.exports = {
   resolve: {
     alias: {
       //...
-      'axios': path.resolve('node_modules/axios/dist/axios.js'),
+      axios: path.resolve("node_modules/axios/dist/axios.js"),
     },
   },
   //...
-}
+};
 ```
 
 ### Server-side installation
@@ -96,20 +96,19 @@ You can use this method, for example, in the `@click` handler of a button:
 Instead of using the method in your template, you can also use it in your script:
 
 ```vue
-
 <script setup>
 import { Inertia } from "@inertiajs/inertia";
-Inertia.visitInModal('/user/create', {
+Inertia.visitInModal("/user/create", {
   // Visit options
-  
+
   // This is passed as additional page props to the page component of your modal
   pageProps: {
-    componentProps1: 'page',
+    componentProps1: "page",
   },
   // This is passed as `props` in the InertiaModal default template
   modalProps: {
-    modalProps1: 'modal',
-  }
+    modalProps1: "modal",
+  },
 });
 </script>
 ```
@@ -148,11 +147,10 @@ To load this form into a modal, we don't want the sidebar, footer, and styling f
 To accomplish this, you need to do three things:
 
 1. Add the `IsModalable` mixin to your component.
-2. Wrap your *whole* component into the `Modalable` component.
+2. Wrap your _whole_ component into the `Modalable` component.
 3. Move the `form` to a separate `#toModal` template and replace it with a `ToModal` component.
 
 ```vue
-
 <template>
   <!-- the new Modalable root component -->
   <ModalableWrapper>
@@ -178,8 +176,8 @@ To accomplish this, you need to do three things:
       <!-- This is the content that is always shown -->
       <!-- the 'new' location of the form -->
       <form @submit.prevent="form.post('/user.store')">
-        <input type="text" v-model="form.name">
-        <input type="email" v-model="form.email">
+        <input type="text" v-model="form.name" />
+        <input type="email" v-model="form.email" />
 
         <button type="submit">Login</button>
       </form>
@@ -189,7 +187,7 @@ To accomplish this, you need to do three things:
 
 <script setup>
 import { ModalableWrapper, ModalSlot } from "@tofandel/inertia-vue-modal";
-import { useForm } from '@inertiajs/inertia-vue3';
+import { useForm } from "@inertiajs/inertia-vue3";
 
 // This is where pageProps is received
 defineProps({
@@ -221,11 +219,11 @@ public function store(UserStoreRequest $request)
 
 You might not always want to route to the detail page. Luckily, you don't have to update your server-side implementation.
 
-The `visitInModal` method accepts a second argument that can either a Boolean or a callback. Instead of redirecting the user, the user stays on the same page, and you can manually handle the event with the callback. This callback is executed after a successful request, for example, when the new user is stored in the database.
+The `visitInModal` method accepts a callback as second argument. Instead of redirecting the user, the user stays on the same page, and you can manually handle the event with the callback. This callback is executed after a successful request, for example, when the new user is stored in the database.
 
 ```javascript
-this.$inertia.visitInModal('/user/create', {
-  redirectBack: (evt) => {
+this.$inertia.visitInModal("/user/create", {
+  onRedirect: (evt) => {
     // Do something
   },
 });

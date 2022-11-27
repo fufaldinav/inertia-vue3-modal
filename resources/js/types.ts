@@ -12,6 +12,8 @@ export type Id = string
 
 export interface ModalObj {
   id: string;
+  parentId: string | null;
+  url: string;
   loading: false,
   component: unknown,
   removeBeforeEventListener: VoidFunction,
@@ -27,6 +29,8 @@ export interface ModalObj {
 
 export interface ModalLoading {
   id: string;
+  parentId: string | null;
+  url: string;
   cancelToken: ShallowRef<CancelTokenSource | null>,
   loading: true,
   close: () => void,
@@ -35,10 +39,15 @@ export interface ModalLoading {
 export type ModalItem = ModalObj | ModalLoading
 
 export type VisitModalOptions = VisitOptions & {
-  redirectBack?: boolean | ((event: GlobalEvent<'success'>) => GlobalEventResult<'success'>),
+  onRedirect?: (event: GlobalEvent<'success'>) => GlobalEventResult<'success'>,
   modalProps?: object,
   pageProps?: object,
   onClose?: (details: ModalObj) => void,
+  closeOnSave?: boolean,
 }
 
 export type VisitInModalFn = `visitInModal${string}`;
+
+export interface LastPage extends Omit<Page, 'url'> {
+  url: URL
+}
