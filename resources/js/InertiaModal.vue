@@ -152,7 +152,7 @@ const visitInModal = (
             lastVisit = event.detail.visit;
             lastPage = page;
             const reqInterceptor = Axios.interceptors.request.use((config) => {
-              if (config.headers[modalHeader] === currentId) {
+              if (config.headers && config.headers[modalHeader] === currentId) {
                 Axios.interceptors.request.eject(reqInterceptor);
                 config.headers[modalHeaderPartial] = page.component;
               }
