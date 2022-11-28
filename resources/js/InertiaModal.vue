@@ -131,6 +131,9 @@ const visitInModal = (
             isRedirect = false;
 
             if (opts.closeOnSave) {
+              if (modal.value?.loading === false) {
+                modal.value.redirected = true
+              }
               modal.value?.close();
             }
 
@@ -169,6 +172,7 @@ const visitInModal = (
           parentId,
           url,
           loading: false,
+          redirected: false,
           component,
           removeBeforeEventListener,
           removeSuccessEventListener,

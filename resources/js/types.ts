@@ -15,6 +15,7 @@ export interface ModalObj {
   parentId: string | null;
   url: string;
   loading: false,
+  redirected: boolean,
   component: unknown,
   removeBeforeEventListener: VoidFunction,
   removeSuccessEventListener?: VoidFunction,
